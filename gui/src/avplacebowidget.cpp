@@ -161,6 +161,11 @@ void AVPlaceboWidget::RenderFrame()
         return;
     }
 
+    if (frame->decode_error_flags) {
+        av_frame_free(&frame);
+        return;
+    }
+
     struct pl_avframe_params avparams = {
         .frame = frame,
         .tex = placebo_tex,

@@ -4,6 +4,16 @@
 #include <libavcodec/avcodec.h>
 #include <libavutil/pixdesc.h>
 
+static bool chiaki_decode_error = false;
+
+static void chiaki_av_log(void *avcl, int level, const char *fmt, va_list vl)
+{
+	if (level <= AV_LOG_ERROR)
+		chiaki_decode_error = true;
+
+	av_log_default_callback(avcl, level, fmt, vl);
+}
+
 static enum AVCodecID chiaki_codec_av_codec_id(ChiakiCodec codec)
 {
 	switch(codec)
@@ -32,9 +42,12 @@ CHIAKI_EXPORT ChiakiErrorCode chiaki_ffmpeg_decoder_init(ChiakiFfmpegDecoder *de
 	decoder->hw_device_ctx = NULL;
 	decoder->hw_pix_fmt = AV_PIX_FMT_NONE;
 
+	av_log_set_callback(chiaki_av_log);
+
 #if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(58, 10, 100)
 	avcodec_register_all();
 #endif
+
 	enum AVCodecID av_codec = chiaki_codec_av_codec_id(codec);
 	decoder->av_codec = avcodec_find_decoder(av_codec);
 	if(!decoder->av_codec)
@@ -119,6 +132,7 @@ CHIAKI_EXPORT bool chiaki_ffmpeg_decoder_video_sample_cb(uint8_t *buf, size_t bu
 	packet.size = buf_size;
 	int r;
 send_packet:
+	chiaki_decode_error = false;
 	r = avcodec_send_packet(decoder->codec_context, &packet);
 	if(r != 0)
 	{
@@ -205,6 +219,9 @@ CHIAKI_EXPORT AVFrame *chiaki_ffmpeg_decoder_pull_frame(ChiakiFfmpegDecoder *dec
 		}
 	}
 	chiaki_mutex_unlock(&decoder->mutex);
+
+	if (chiaki_decode_error)
+		frame->decode_error_flags |= 1;
 
 	return frame;
 }
