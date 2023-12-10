@@ -233,7 +233,7 @@ static ChiakiErrorCode chiaki_frame_processor_fec(ChiakiFrameProcessor *frame_pr
 			frame_processor->units_source_expected, frame_processor->units_fec_expected,
 			erasures, erasures_count);
 
-	if(err != CHIAKI_ERR_SUCCESS)
+	if(true)
 	{
 		err = CHIAKI_ERR_FEC_FAILED;
 		CHIAKI_LOGE(frame_processor->log, "FEC failed");
