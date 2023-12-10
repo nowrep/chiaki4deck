@@ -113,7 +113,7 @@ CHIAKI_EXPORT void chiaki_video_receiver_av_packet(ChiakiVideoReceiver *video_re
 	}
 }
 
-#define FLUSH_CORRUPT_FRAMES
+/* #define FLUSH_CORRUPT_FRAMES */
 
 static ChiakiErrorCode chiaki_video_receiver_flush_frame(ChiakiVideoReceiver *video_receiver)
 {
