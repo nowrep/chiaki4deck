@@ -43,7 +43,6 @@ class AVPlaceboWidget : public QObject, public IAVWidget
         VkSurfaceKHR surface = VK_NULL_HANDLE;
         AVFrame *queued_frame = nullptr;
         bool stream_started = false;
-        bool first_frame_done = false;
         QString error_title;
         QString error_text;
         QImage overlay_img;
