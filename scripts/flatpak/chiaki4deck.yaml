@@ -18,6 +18,7 @@ finish-args:
   - --own-name=org.kde.*
   - --env=DBUS_FATAL_WARNINGS=0
   - --env=RADV_PERFTEST=video_decode
+  - --env=QML_DISABLE_DISK_CACHE=1
   - --talk-name=org.freedesktop.ScreenSaver
   - --filesystem=xdg-run/pipewire-0
   - --filesystem=xdg-run/gamescope-0
