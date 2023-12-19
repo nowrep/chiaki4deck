@@ -5,6 +5,7 @@ int main(int argc, char *argv[]) { return real_main(argc, argv); }
 
 #include <streamwindow.h>
 #include <mainwindow.h>
+#include <qmlmainwindow.h>
 #include <streamsession.h>
 #include <settings.h>
 #include <registdialog.h>
@@ -58,6 +59,7 @@ int real_main(int argc, char *argv[])
 
 	QApplication::setOrganizationName("Chiaki");
 	QApplication::setApplicationName("Chiaki");
+	QApplication::setApplicationVersion(CHIAKI_VERSION);
 	QApplication::setApplicationDisplayName("chiaki4deck");
 	QApplication::setDesktopFileName("chiaki4deck");
 
@@ -249,14 +251,14 @@ int real_main(int argc, char *argv[])
 
 int RunMain(QApplication &app, Settings *settings)
 {
-	MainWindow main_window(settings);
+	QmlMainWindow main_window(settings);
 	main_window.show();
 	return app.exec();
 }
 
 int RunStream(QApplication &app, const StreamSessionConnectInfo &connect_info)
 {
-	StreamWindow *window = new StreamWindow(connect_info);
-	app.setQuitOnLastWindowClosed(true);
+	QmlMainWindow main_window(connect_info);
+	main_window.show();
 	return app.exec();
 }

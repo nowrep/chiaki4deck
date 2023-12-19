@@ -2,7 +2,7 @@
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
-find_package(Qt5 REQUIRED COMPONENTS Core Widgets Gui Concurrent Multimedia OpenGL Svg WebEngineWidgets)
+find_package(Qt5 REQUIRED COMPONENTS Core Widgets Gui Concurrent Multimedia OpenGL Svg WebEngineWidgets Qml Quick)
 if(APPLE)
 	find_package(Qt5 REQUIRED COMPONENTS MacExtras)
 endif()
@@ -51,12 +51,17 @@ set(SOURCE_FILES
 	src/controllermanager.cpp
 	include/loginpindialog.h
 	src/loginpindialog.cpp
-  	include/psnaccountid.h
+	include/psnaccountid.h
 	src/psnaccountid.cpp
 	include/psnlogindialog.h
-    src/psnlogindialog.cpp
+	src/psnlogindialog.cpp
 	include/jsonrequester.h
-	src/jsonrequester.cpp)
+	src/jsonrequester.cpp
+	include/qmlmainwindow.h
+	src/qmlmainwindow.cpp
+	include/qmlbackend.h
+	src/qmlbackend.cpp
+	src/qml/qml.qrc)
 set(RESOURCE_FILES "")
 
 if(APPLE)
@@ -99,7 +104,7 @@ if(CHIAKI_ENABLE_CLI)
 	target_link_libraries(chiaki chiaki-cli-lib)
 endif()
 
-target_link_libraries(chiaki Qt5::Core Qt5::Widgets Qt5::Gui Qt5::Concurrent Qt5::Multimedia Qt5::OpenGL Qt5::Svg Qt5::WebEngineWidgets)
+target_link_libraries(chiaki Qt5::Core Qt5::Widgets Qt5::Gui Qt5::Concurrent Qt5::Multimedia Qt5::OpenGL Qt5::Svg Qt5::WebEngineWidgets Qt5::Quick Qt5::Qml)
 target_link_libraries(chiaki SDL2::SDL2)
 if(APPLE)
 	target_link_libraries(chiaki Qt5::MacExtras)

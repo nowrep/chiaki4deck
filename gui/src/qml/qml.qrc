@@ -1,0 +1,10 @@
+<RCC>
+  <qresource prefix="/">
+    <file>qtquickcontrols2.conf</file>
+    <file>Main.qml</file>
+    <file>MainView.qml</file>
+    <file>StreamView.qml</file>
+    <file>DialogView.qml</file>
+    <file>ManualHostDialog.qml</file>
+  </qresource>
+</RCC>
