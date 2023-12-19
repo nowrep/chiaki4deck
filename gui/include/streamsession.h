@@ -122,6 +122,7 @@ class StreamSession : public QObject
 		bool muted;
 		bool mic_connected;
 		bool allow_unmute;
+		bool input_blocked;
 
 		QHash<int, Controller *> controllers;
 #if CHIAKI_GUI_ENABLE_SETSU
@@ -223,6 +224,8 @@ class StreamSession : public QObject
 		void HandleMousePressEvent(QMouseEvent *event);
 		void HandleMouseMoveEvent(QMouseEvent *event, float width, float height);
 		void ReadMic(const QByteArray &micdata);
+
+		void BlockInput(bool block) { input_blocked = block; }
 
 	signals:
 		void FfmpegFrameAvailable();

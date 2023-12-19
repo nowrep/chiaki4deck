@@ -2,9 +2,14 @@
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
-find_package(Qt5 REQUIRED COMPONENTS Core Widgets Gui Concurrent OpenGL Svg WebEngineWidgets)
+find_package(Qt5 REQUIRED COMPONENTS Core Gui Concurrent OpenGL Svg)
 if(APPLE)
 	find_package(Qt5 REQUIRED COMPONENTS MacExtras)
+endif()
+if(CHIAKI_ENABLE_QMLGUI)
+	find_package(Qt5 REQUIRED COMPONENTS Qml Quick WebEngine)
+else()
+	find_package(Qt5 REQUIRED COMPONENTS Widgets WebEngineWidgets)
 endif()
 
 if(WIN32)
@@ -14,47 +19,21 @@ endif()
 set(SOURCE_FILES
 	include/exception.h
 	src/main.cpp
-	include/streamwindow.h
-	src/streamwindow.cpp
-	include/mainwindow.h
-	src/mainwindow.cpp
-	include/dynamicgridwidget.h
-	src/dynamicgridwidget.cpp
-	include/serveritemwidget.h
-	src/serveritemwidget.cpp
 	include/discoverymanager.h
 	src/discoverymanager.cpp
 	include/streamsession.h
 	src/streamsession.cpp
 	include/sessionlog.h
 	src/sessionlog.cpp
-	include/avopenglwidget.h
-	src/avopenglwidget.cpp
-	include/avopenglframeuploader.h
-	src/avopenglframeuploader.cpp
-	include/servericonwidget.h
-	src/servericonwidget.cpp
 	include/settings.h
 	src/settings.cpp
-	include/registdialog.h
-	src/registdialog.cpp
 	include/host.h
 	src/host.cpp
-	include/settingskeycapturedialog.h
-	src/settingskeycapturedialog.cpp
-	include/settingsdialog.h
-	src/settingsdialog.cpp
-	include/manualhostdialog.h
-	src/manualhostdialog.cpp
 	res/resources.qrc
 	include/controllermanager.h
 	src/controllermanager.cpp
-	include/loginpindialog.h
-	src/loginpindialog.cpp
-  	include/psnaccountid.h
+	include/psnaccountid.h
 	src/psnaccountid.cpp
-	include/psnlogindialog.h
-    src/psnlogindialog.cpp
 	include/jsonrequester.h
 	src/jsonrequester.cpp)
 set(RESOURCE_FILES "")
@@ -63,13 +42,51 @@ if(APPLE)
 	list(APPEND RESOURCE_FILES "chiaki.icns")
 endif()
 
-if (CHIAKI_ENABLE_PLACEBO)
+if(CHIAKI_ENABLE_QMLGUI)
 	list(APPEND SOURCE_FILES
-		include/avplacebowidget.h
-		src/avplacebowidget.cpp
-		include/avplaceboframeuploader.h
-		src/avplaceboframeuploader.cpp
+		src/qml/qml.qrc
+		include/qmlmainwindow.h
+		src/qmlmainwindow.cpp
+		include/qmlbackend.h
+		src/qmlbackend.cpp
 	)
+else()
+	list(APPEND SOURCE_FILES
+		include/streamwindow.h
+		src/streamwindow.cpp
+		include/mainwindow.h
+		src/mainwindow.cpp
+		include/dynamicgridwidget.h
+		src/dynamicgridwidget.cpp
+		include/serveritemwidget.h
+		src/serveritemwidget.cpp
+		include/avopenglwidget.h
+		src/avopenglwidget.cpp
+		include/avopenglframeuploader.h
+		src/avopenglframeuploader.cpp
+		include/servericonwidget.h
+		src/servericonwidget.cpp
+		include/registdialog.h
+		src/registdialog.cpp
+		include/settingskeycapturedialog.h
+		src/settingskeycapturedialog.cpp
+		include/settingsdialog.h
+		src/settingsdialog.cpp
+		include/manualhostdialog.h
+		src/manualhostdialog.cpp
+		include/loginpindialog.h
+		src/loginpindialog.cpp
+		include/psnlogindialog.h
+		src/psnlogindialog.cpp
+	)
+	if (CHIAKI_ENABLE_PLACEBO)
+		list(APPEND SOURCE_FILES
+			include/avplacebowidget.h
+			src/avplacebowidget.cpp
+			include/avplaceboframeuploader.h
+			src/avplaceboframeuploader.cpp
+		)
+	endif()
 endif()
 
 add_executable(chiaki WIN32
@@ -78,6 +95,12 @@ add_executable(chiaki WIN32
 )
 target_include_directories(chiaki PRIVATE include)
 
+if(CHIAKI_ENABLE_QMLGUI)
+	target_compile_definitions(chiaki PRIVATE CHIAKI_GUI_ENABLE_QML)
+	target_link_libraries(chiaki Qt5::Qml Qt5::Quick Qt5::WebEngine)
+else()
+	target_link_libraries(chiaki Qt5::Widgets Qt5::WebEngineWidgets)
+endif()
 
 if(CHIAKI_ENABLE_PLACEBO)
 	if (NOT TARGET Qt5::GuiPrivate)
@@ -99,7 +122,7 @@ if(CHIAKI_ENABLE_CLI)
 	target_link_libraries(chiaki chiaki-cli-lib)
 endif()
 
-target_link_libraries(chiaki Qt5::Core Qt5::Widgets Qt5::Gui Qt5::Concurrent Qt5::OpenGL Qt5::Svg Qt5::WebEngineWidgets)
+target_link_libraries(chiaki Qt5::Core Qt5::Gui Qt5::Concurrent Qt5::OpenGL Qt5::Svg)
 target_link_libraries(chiaki SDL2::SDL2)
 if(APPLE)
 	target_link_libraries(chiaki Qt5::MacExtras)

@@ -115,6 +115,7 @@ StreamSession::StreamSession(const StreamSessionConnectInfo &connect_info, QObje
 	muted = true;
 	mic_connected = false;
 	allow_unmute = false;
+	input_blocked = false;
 	ChiakiErrorCode err;
 #if CHIAKI_GUI_ENABLE_STEAMDECK_NATIVE
     haptics_sdeck = 0;
@@ -669,6 +670,12 @@ void StreamSession::SendFeedbackState()
 {
 	ChiakiControllerState state;
 	chiaki_controller_state_set_idle(&state);
+
+	if(input_blocked)
+	{
+		chiaki_session_set_controller_state(&session, &state);
+		return;
+	}
 
 #if CHIAKI_GUI_ENABLE_SETSU
 	// setsu is the one that potentially has gyro/accel/orient so copy that directly first
