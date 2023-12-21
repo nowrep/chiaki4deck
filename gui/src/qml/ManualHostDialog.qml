@@ -8,7 +8,10 @@ DialogView {
     title: qsTr("Add Manual Console")
     buttonText: qsTr("✓ Save")
     buttonEnabled: hostField.text.trim()
-    onAccepted: Chiaki.addManualHost(consoleCombo.model[consoleCombo.currentIndex].index, hostField.text)
+    onAccepted: {
+        Chiaki.addManualHost(consoleCombo.model[consoleCombo.currentIndex].index, hostField.text);
+        close();
+    }
 
     Item {
         GridLayout {

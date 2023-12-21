@@ -6,5 +6,6 @@
     <file>StreamView.qml</file>
     <file>DialogView.qml</file>
     <file>ManualHostDialog.qml</file>
+    <file>RegistDialog.qml</file>
   </qresource>
 </RCC>
