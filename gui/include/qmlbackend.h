@@ -7,6 +7,7 @@
 #include <QThread>
 #include <QJSValue>
 
+class QmlSettings;
 class QmlMainWindow;
 class StreamSession;
 
@@ -44,7 +45,8 @@ private:
 class QmlBackend : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QmlMainWindow* window READ window CONSTANT)
+    Q_PROPERTY(QmlMainWindow* window READ qmlWindow CONSTANT)
+    Q_PROPERTY(QmlSettings* settings READ qmlSettings CONSTANT)
     Q_PROPERTY(StreamSession* session READ session NOTIFY sessionChanged)
     Q_PROPERTY(bool discoveryEnabled READ discoveryEnabled WRITE setDiscoveryEnabled NOTIFY discoveryEnabledChanged)
     Q_PROPERTY(QVariantList hosts READ hosts NOTIFY hostsChanged)
@@ -53,7 +55,8 @@ public:
     QmlBackend(Settings *settings, QmlMainWindow *window);
     ~QmlBackend();
 
-    QmlMainWindow *window() const;
+    QmlMainWindow *qmlWindow() const;
+    QmlSettings *qmlSettings() const;
     StreamSession *session() const;
 
     bool discoveryEnabled() const;
@@ -72,8 +75,6 @@ public:
     Q_INVOKABLE void connectToHost(int index);
     Q_INVOKABLE void stopSession(bool sleep);
     Q_INVOKABLE void enterPin(const QString &pin);
-
-    Q_INVOKABLE void showSettingsDialog();
 
 signals:
     void sessionChanged(StreamSession *session);
@@ -107,6 +108,7 @@ private:
     void updateControllers();
 
     Settings *settings = {};
+    QmlSettings *settings_qml = {};
     QmlMainWindow *main_window = {};
     StreamSession *stream_session = {};
     QThread *frame_thread = {};

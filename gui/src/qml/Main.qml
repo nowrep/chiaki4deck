@@ -23,6 +23,14 @@ Item {
         stack.push(manualHostDialogComponent);
     }
 
+    function showRegistDialog(host) {
+        stack.push(registDialogComponent, {host: host});
+    }
+
+    function showSettingsDialog() {
+        stack.push(settingsDialogComponent);
+    }
+
     Component.onCompleted: {
         if (Chiaki.session)
             stack.replace(stack.get(0), streamViewComponent, {}, StackView.Immediate);
@@ -111,7 +119,7 @@ Item {
         }
 
         function onRegistDialogRequested(host) {
-            stack.push(registDialogComponent, {host: host});
+            showRegistDialog(host);
         }
     }
 
@@ -128,6 +136,11 @@ Item {
     Component {
         id: manualHostDialogComponent
         ManualHostDialog { }
+    }
+
+    Component {
+        id: settingsDialogComponent
+        SettingsDialog { }
     }
 
     Component {

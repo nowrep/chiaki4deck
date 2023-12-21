@@ -49,6 +49,8 @@ if(CHIAKI_ENABLE_QMLGUI)
 		src/qmlmainwindow.cpp
 		include/qmlbackend.h
 		src/qmlbackend.cpp
+		include/qmlsettings.h
+		src/qmlsettings.cpp
 	)
 else()
 	list(APPEND SOURCE_FILES
