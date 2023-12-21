@@ -33,6 +33,11 @@ int main(int argc, char *argv[]) { return real_main(argc, argv); }
 
 Q_DECLARE_METATYPE(ChiakiLogLevel)
 
+#ifdef CHIAKI_GUI_ENABLE_STEAMDECK_NATIVE
+#include <QtPlugin>
+Q_IMPORT_PLUGIN(SDInputContextPlugin)
+#endif
+
 #ifdef CHIAKI_ENABLE_CLI
 struct CLICommand
 {
@@ -56,6 +61,11 @@ int real_main(int argc, char *argv[])
 	qRegisterMetaType<ChiakiQuitReason>();
 	qRegisterMetaType<ChiakiRegistEventType>();
 	qRegisterMetaType<ChiakiLogLevel>();
+
+#ifdef CHIAKI_GUI_ENABLE_STEAMDECK_NATIVE
+	if (qEnvironmentVariableIsSet("SteamDeck"))
+		qputenv("QT_IM_MODULE", "sdinput");
+#endif
 
 	QApplication::setOrganizationName("Chiaki");
 	QApplication::setApplicationName("Chiaki");
