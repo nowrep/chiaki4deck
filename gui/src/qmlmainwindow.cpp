@@ -804,24 +804,17 @@ bool QmlMainWindow::event(QEvent *event)
 {
     switch (event->type()) {
     case QEvent::MouseMove:
-        if (session && !grab_input) {
-            session->HandleMouseMoveEvent(static_cast<QMouseEvent*>(event), width(), height());
-            return true;
-        }
-        QGuiApplication::sendEvent(quick_window, event);
-        break;
     case QEvent::MouseButtonPress:
+    case QEvent::MouseButtonRelease:
         if (static_cast<QMouseEvent*>(event)->source() != Qt::MouseEventNotSynthesized)
             return true;
         if (session && !grab_input) {
-            session->HandleMousePressEvent(static_cast<QMouseEvent*>(event));
-            return true;
-        }
-        QGuiApplication::sendEvent(quick_window, event);
-        break;
-    case QEvent::MouseButtonRelease:
-        if (session && !grab_input) {
-            session->HandleMouseReleaseEvent(static_cast<QMouseEvent*>(event));
+            if (event->type() == QEvent::MouseMove)
+                session->HandleMouseMoveEvent(static_cast<QMouseEvent*>(event), width(), height());
+            else if (event->type() == QEvent::MouseButtonPress)
+                session->HandleMousePressEvent(static_cast<QMouseEvent*>(event));
+            else if (event->type() == QEvent::MouseButtonRelease)
+                session->HandleMouseReleaseEvent(static_cast<QMouseEvent*>(event));
             return true;
         }
         QGuiApplication::sendEvent(quick_window, event);
