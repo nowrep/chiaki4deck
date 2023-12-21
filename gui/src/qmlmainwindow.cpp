@@ -358,6 +358,7 @@ void QmlMainWindow::init(Settings *settings)
     QQuickWindow::setDefaultAlphaBuffer(true);
     quick_window = new QQuickWindow(quick_render);
     quick_window->setColor(QColor(0, 0, 0, 0));
+    connect(quick_window, &QQuickWindow::focusObjectChanged, this, &QmlMainWindow::focusObjectChanged);
 
     qml_engine = new QQmlEngine(this);
     if (!qml_engine->incubationController())
@@ -872,4 +873,9 @@ bool QmlMainWindow::event(QEvent *event)
     }
 
     return ret;
+}
+
+QObject *QmlMainWindow::focusObject() const
+{
+    return quick_window->focusObject();
 }

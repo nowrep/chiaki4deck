@@ -68,7 +68,6 @@ public:
     VideoPreset videoPreset() const;
     void setVideoPreset(VideoPreset mode);
 
-
     void show();
     void presentFrame(AVFrame *frame);
 
@@ -105,6 +104,7 @@ private:
     void render();
     bool handleShortcut(QKeyEvent *event);
     bool event(QEvent *event) override;
+    QObject *focusObject() const override;
 
     bool has_video = false;
     bool keep_video = false;

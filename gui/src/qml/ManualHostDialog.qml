@@ -5,11 +5,11 @@ import QtQuick.Controls 2.15
 import org.streetpea.chiaki4deck 1.0
 
 DialogView {
-    StackView.onActivated: hostField.forceActiveFocus()
     title: qsTr("Add Manual Console")
     buttonText: qsTr("✓ Save")
     buttonEnabled: hostField.text.trim()
     onAccepted: Chiaki.addManualHost(consoleCombo.model[consoleCombo.currentIndex].index, hostField.text)
+    StackView.onActivated: hostField.forceActiveFocus()
 
     Item {
         GridLayout {

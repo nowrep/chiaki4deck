@@ -116,12 +116,20 @@ if(CHIAKI_ENABLE_SETSU)
 	target_compile_definitions(chiaki PRIVATE CHIAKI_GUI_ENABLE_SETSU)
 endif()
 if(CHIAKI_ENABLE_STEAMDECK_NATIVE)
-	target_link_libraries(chiaki sdeck)
+	add_library(sdinput STATIC
+		include/sdinputcontext.h
+		src/sdinputcontext.cpp)
+	target_include_directories(sdinput PRIVATE include)
+    target_compile_definitions(sdinput PUBLIC QT_STATICPLUGIN)
+	target_link_libraries(sdinput Qt5::GuiPrivate Qt5::Quick)
+	target_link_libraries(chiaki sdeck sdinput)
 	target_compile_definitions(chiaki PRIVATE CHIAKI_GUI_ENABLE_STEAMDECK_NATIVE)
 endif()
 if(NOT CHIAKI_ENABLE_FFMPEG_DECODER)
 	message(FATAL_ERROR "Chiaki GUI requires CHIAKI_ENABLE_FFMPEG_DECODER=ON")
 endif()
+
+
 
 set_target_properties(chiaki PROPERTIES
 		MACOSX_BUNDLE TRUE
