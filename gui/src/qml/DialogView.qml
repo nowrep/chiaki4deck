@@ -12,6 +12,10 @@ Item {
     signal accepted()
     signal rejected()
 
+    function close() {
+        stack.pop();
+    }
+
     onMainItemChanged: {
         if (mainItem) {
             mainItem.parent = contentItem;
@@ -42,7 +46,7 @@ Item {
                 text: "❮"
                 onClicked: {
                     dialog.rejected();
-                    stack.pop();
+                    dialog.close();
                 }
             }
 
@@ -54,10 +58,7 @@ Item {
                 flat: true
                 padding: 30
                 font.pixelSize: 25
-                onClicked: {
-                    dialog.accepted();
-                    stack.pop();
-                }
+                onClicked: dialog.accepted()
             }
         }
 

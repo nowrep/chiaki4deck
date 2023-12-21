@@ -109,6 +109,10 @@ Item {
             errorTextLabel.text = text;
             errorHideTimer.start();
         }
+
+        function onRegistDialogRequested(host) {
+            stack.push(registDialogComponent, {host: host});
+        }
     }
 
     Component {
@@ -124,5 +128,10 @@ Item {
     Component {
         id: manualHostDialogComponent
         ManualHostDialog { }
+    }
+
+    Component {
+        id: registDialogComponent
+        RegistDialog { }
     }
 }
