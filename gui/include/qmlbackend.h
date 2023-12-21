@@ -71,6 +71,7 @@ public:
     Q_INVOKABLE bool registerHost(const QString &host, const QString &psn_id, const QString &pin, bool broadcast, int target, const QJSValue &callback);
     Q_INVOKABLE void connectToHost(int index);
     Q_INVOKABLE void stopSession(bool sleep);
+    Q_INVOKABLE void enterPin(const QString &pin);
 
     Q_INVOKABLE void showSettingsDialog();
 
@@ -81,6 +82,7 @@ signals:
 
     void error(const QString &title, const QString &text);
     void sessionError(const QString &title, const QString &text);
+    void sessionPinDialogRequested();
     void sessionStopDialogRequested();
     void registDialogRequested(const QString &host);
 
@@ -102,7 +104,6 @@ private:
 
     DisplayServer displayServerAt(int index) const;
     void sendWakeup(const DisplayServer &server);
-    void showLoginPINDialog(bool incorrect);
     void updateControllers();
 
     Settings *settings = {};
