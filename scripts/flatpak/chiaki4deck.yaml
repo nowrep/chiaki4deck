@@ -218,8 +218,8 @@ modules:
     builddir: true
     sources:
       - type: git
-        url: https://github.com/streetpea/chiaki4deck.git
-        branch: chiaki4deck
+        url: https://github.com/nowrep/chiaki4deck.git
+        branch: qmlgui-dev
     post-install:
       - "install -Dm755 ../scripts/psn-account-id.py /app/bin/psn-account-id"
       - "install -Dm755 ../scripts/vulkan-gamescope-layers/VkLayer_FROG_gamescope_wsi.x86_64.json /app/share/vulkan/implicit_layer.d/VkLayer_FROG_gamescope_wsi.x86_64.json"
