@@ -1,7 +1,6 @@
 #include "qmlbackend.h"
 #include "qmlmainwindow.h"
 #include "streamsession.h"
-#include "loginpindialog.h"
 #include "settingsdialog.h"
 #include "registdialog.h"
 #include "controllermanager.h"
@@ -209,7 +208,7 @@ void QmlBackend::createSession(const StreamSessionConnectInfo &connect_info)
         if (!connect_info.initial_login_pin.isEmpty() && incorrect == false)
             stream_session->SetLoginPIN(connect_info.initial_login_pin);
         else
-            showLoginPINDialog(incorrect);
+            emit sessionPinDialogRequested();
     });
 
     if (connect_info.fullscreen || connect_info.zoom || connect_info.stretch)
@@ -366,6 +365,12 @@ void QmlBackend::stopSession(bool sleep)
     stream_session->Stop();
 }
 
+void QmlBackend::enterPin(const QString &pin)
+{
+    if (stream_session)
+        stream_session->SetLoginPIN(pin);
+}
+
 void QmlBackend::showSettingsDialog()
 {
     SettingsDialog dialog(settings);
@@ -414,21 +419,6 @@ void QmlBackend::sendWakeup(const DisplayServer &server)
     } catch(const Exception &e) {
         emit error(tr("Wakeup failed"), tr("Failed to send Wakeup packet:\n%1").arg(e.what()));
     }
-}
-
-void QmlBackend::showLoginPINDialog(bool incorrect)
-{
-    auto dialog = new LoginPINDialog(incorrect);
-    dialog->setAttribute(Qt::WA_DeleteOnClose);
-    connect(dialog, &QDialog::finished, this, [this, dialog](int result) {
-        if (!stream_session)
-            return;
-        if (result == QDialog::Accepted)
-            stream_session->SetLoginPIN(dialog->GetPIN());
-        else
-            stream_session->Stop();
-    });
-    dialog->show();
 }
 
 void QmlBackend::updateControllers()

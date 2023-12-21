@@ -162,6 +162,31 @@ Item {
         }
     }
 
+    Dialog {
+        id: sessionPinDialog
+        anchors.centerIn: parent
+        title: qsTr("Console Login PIN")
+        modal: true
+        closePolicy: Popup.NoAutoClose
+        standardButtons: Dialog.Ok | Dialog.Cancel
+        onOpened: {
+            Chiaki.window.grabInput = true;
+            standardButton(Dialog.Ok).enabled = Qt.binding(function() {
+                return pinField.acceptableInput;
+            });
+            pinField.forceActiveFocus();
+        }
+        onClosed: Chiaki.window.grabInput = false;
+        onAccepted: Chiaki.enterPin(pinField.text)
+        onRejected: Chiaki.stopSession(false)
+
+        TextField {
+            id: pinField
+            implicitWidth: 200
+            validator: RegularExpressionValidator { regularExpression: /[0-9]{4}/ }
+        }
+    }
+
     Timer {
         id: closeTimer
         interval: 2000
@@ -184,8 +209,11 @@ Item {
             closeTimer.start();
         }
 
+        function onSessionPinDialogRequested() {
+            sessionPinDialog.open();
+        }
+
         function onSessionStopDialogRequested() {
-            Chiaki.window.grabInput = true;
             sessionStopDialog.open();
         }
     }
