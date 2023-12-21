@@ -6,7 +6,7 @@ import org.streetpea.chiaki4deck 1.0
 
 DialogView {
     title: qsTr("Add Manual Console")
-    buttonText: qsTr("✓ Save")
+    buttonText: qsTr("✓ Add")
     buttonEnabled: hostField.text.trim()
     StackView.onActivated: hostField.forceActiveFocus()
     onAccepted: {
@@ -26,6 +26,7 @@ DialogView {
             columnSpacing: 20
 
             Label {
+                Layout.alignment: Qt.AlignRight
                 text: qsTr("Host:")
             }
 
@@ -35,6 +36,7 @@ DialogView {
             }
 
             Label {
+                Layout.alignment: Qt.AlignRight
                 text: qsTr("Registered Consoles:")
             }
 

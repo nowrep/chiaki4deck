@@ -53,7 +53,7 @@ Item {
                 icon.source: "qrc:/icons/settings-20px.svg";
                 icon.width: 50
                 icon.height: 50
-                onClicked: Chiaki.showSettingsDialog()
+                onClicked: root.showSettingsDialog()
             }
         }
 
@@ -173,7 +173,7 @@ Item {
         padding: 20
         checkable: true
         checked: Chiaki.discoveryEnabled
-        onCheckedChanged: Chiaki.discoveryEnabled = checked
+        onToggled: Chiaki.discoveryEnabled = checked
     }
 
     Image {
