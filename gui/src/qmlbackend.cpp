@@ -1,7 +1,7 @@
 #include "qmlbackend.h"
+#include "qmlsettings.h"
 #include "qmlmainwindow.h"
 #include "streamsession.h"
-#include "settingsdialog.h"
 #include "registdialog.h"
 #include "controllermanager.h"
 
@@ -70,11 +70,13 @@ QmlController::QmlController(Controller *c, QObject *t, QObject *parent)
 QmlBackend::QmlBackend(Settings *settings, QmlMainWindow *window)
     : QObject(window)
     , settings(settings)
+    , settings_qml(new QmlSettings(settings, this))
     , main_window(window)
 {
     const char *uri = "org.streetpea.chiaki4deck";
     qmlRegisterSingletonInstance(uri, 1, 0, "Chiaki", this);
     qmlRegisterUncreatableType<QmlMainWindow>(uri, 1, 0, "ChiakiWindow", {});
+    qmlRegisterUncreatableType<QmlSettings>(uri, 1, 0, "ChiakiSettings", {});
     qmlRegisterUncreatableType<StreamSession>(uri, 1, 0, "ChiakiSession", {});
 
     QObject *frame_obj = new QObject();
@@ -99,9 +101,14 @@ QmlBackend::~QmlBackend()
     delete frame_thread->parent();
 }
 
-QmlMainWindow *QmlBackend::window() const
+QmlMainWindow *QmlBackend::qmlWindow() const
 {
     return main_window;
+}
+
+QmlSettings *QmlBackend::qmlSettings() const
+{
+    return settings_qml;
 }
 
 StreamSession *QmlBackend::session() const
@@ -369,12 +376,6 @@ void QmlBackend::enterPin(const QString &pin)
 {
     if (stream_session)
         stream_session->SetLoginPIN(pin);
-}
-
-void QmlBackend::showSettingsDialog()
-{
-    SettingsDialog dialog(settings);
-    dialog.exec();
 }
 
 QmlBackend::DisplayServer QmlBackend::displayServerAt(int index) const

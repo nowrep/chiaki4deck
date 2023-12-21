@@ -61,6 +61,8 @@ set(SOURCE_FILES
 	src/qmlmainwindow.cpp
 	include/qmlbackend.h
 	src/qmlbackend.cpp
+	include/qmlsettings.h
+	src/qmlsettings.cpp
 	src/qml/qml.qrc)
 set(RESOURCE_FILES "")
 
