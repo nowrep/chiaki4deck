@@ -80,6 +80,7 @@ signals:
 
 private:
     struct SwapchainTexture {
+        bool dirty = true;
         pl_tex placebo_tex = {};
         VkSemaphore vk_sem_in = VK_NULL_HANDLE;
         VkSemaphore vk_sem_out = VK_NULL_HANDLE;
@@ -97,7 +98,7 @@ private:
     void destroySwapchain();
     void resizeSwapchain();
     void updateSwapchain();
-    bool getSwapchainTexture(pl_tex fbo, SwapchainTexture &t);
+    SwapchainTexture &getSwapchainTexture(pl_tex fbo);
     void destroySwapchainTextures();
     void sync();
     void render();

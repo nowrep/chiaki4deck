@@ -496,78 +496,71 @@ void QmlMainWindow::updateSwapchain()
     update();
 }
 
-bool QmlMainWindow::getSwapchainTexture(pl_tex fbo, SwapchainTexture &t)
+QmlMainWindow::SwapchainTexture &QmlMainWindow::getSwapchainTexture(pl_tex fbo)
 {
-    if (swapchain_textures.contains(fbo)) {
-        t = swapchain_textures[fbo];
-        return true;
+    if (!swapchain_textures.contains(fbo)) {
+        SwapchainTexture t;
+        struct pl_tex_params tex_params = {
+            .w = swapchain_size.width(),
+            .h = swapchain_size.height(),
+            .format = pl_find_fmt(placebo_vulkan->gpu, PL_FMT_UNORM, 4, 0, 0, PL_FMT_CAP_RENDERABLE),
+            .sampleable = true,
+            .renderable = true,
+            .export_handle = PL_HANDLE_FD,
+        };
+        t.placebo_tex = pl_tex_create(placebo_vulkan->gpu, &tex_params);
+        if (!t.placebo_tex)
+            qCCritical(chiakiGui) << "Failed to create placebo texture";
+
+        gl_funcs.glCreateMemoryObjectsEXT(1, &t.gl_mem);
+        GLint dedicated = GL_TRUE;
+        gl_funcs.glMemoryObjectParameterivEXT(t.gl_mem, GL_DEDICATED_MEMORY_OBJECT_EXT, &dedicated);
+        gl_funcs.glImportMemoryFdEXT(t.gl_mem, t.placebo_tex->shared_mem.size, GL_HANDLE_TYPE_OPAQUE_FD_EXT, dup(t.placebo_tex->shared_mem.handle.fd));
+
+        gl_context->functions()->glDeleteTextures(1, &t.gl_tex);
+        gl_context->functions()->glGenTextures(1, &t.gl_tex);
+        gl_context->functions()->glBindTexture(GL_TEXTURE_2D, t.gl_tex);
+        gl_context->functions()->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_TILING_EXT, GL_OPTIMAL_TILING_EXT);
+        gl_funcs.glTexStorageMem2DEXT(GL_TEXTURE_2D, 1, GL_RGBA8, swapchain_size.width(), swapchain_size.height(), t.gl_mem, 0);
+        gl_context->functions()->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        gl_context->functions()->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+        if (!gl_funcs.glIsMemoryObjectEXT(t.gl_mem))
+            qCCritical(chiakiGui) << "OpenGL image import failed";
+
+        gl_context->functions()->glGenFramebuffers(1, &t.gl_fbo);
+        gl_context->functions()->glBindFramebuffer(GL_FRAMEBUFFER, t.gl_fbo);
+        gl_context->functions()->glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, t.gl_tex, 0);
+        gl_context->functions()->glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        union pl_handle sem_in = {};
+        struct pl_vulkan_sem_params sem_params_in = {
+            .type = VK_SEMAPHORE_TYPE_BINARY,
+            .export_handle = PL_HANDLE_FD,
+            .out_handle = &sem_in,
+        };
+        t.vk_sem_in = pl_vulkan_sem_create(placebo_vulkan->gpu, &sem_params_in);
+
+        union pl_handle sem_out = {};
+        struct pl_vulkan_sem_params sem_params_out = {
+            .type = VK_SEMAPHORE_TYPE_BINARY,
+            .export_handle = PL_HANDLE_FD,
+            .out_handle = &sem_out,
+        };
+        t.vk_sem_out = pl_vulkan_sem_create(placebo_vulkan->gpu, &sem_params_out);
+
+        gl_funcs.glGenSemaphoresEXT(1, &t.gl_sem_in);
+        gl_funcs.glGenSemaphoresEXT(1, &t.gl_sem_out);
+        gl_funcs.glImportSemaphoreFdEXT(t.gl_sem_in, GL_HANDLE_TYPE_OPAQUE_FD_EXT, sem_in.fd);
+        gl_funcs.glImportSemaphoreFdEXT(t.gl_sem_out, GL_HANDLE_TYPE_OPAQUE_FD_EXT, sem_out.fd);
+
+        if (!gl_funcs.glIsSempahoreEXT(t.gl_sem_in) || !gl_funcs.glIsSempahoreEXT(t.gl_sem_out))
+            qCCritical(chiakiGui) << "OpenGL semaphore import failed";
+
+        swapchain_textures[fbo] = t;
     }
 
-    struct pl_tex_params tex_params = {
-        .w = swapchain_size.width(),
-        .h = swapchain_size.height(),
-        .format = pl_find_fmt(placebo_vulkan->gpu, PL_FMT_UNORM, 4, 0, 0, PL_FMT_CAP_RENDERABLE),
-        .sampleable = true,
-        .renderable = true,
-        .export_handle = PL_HANDLE_FD,
-    };
-    t.placebo_tex = pl_tex_create(placebo_vulkan->gpu, &tex_params);
-    if (!t.placebo_tex) {
-        qCCritical(chiakiGui) << "Failed to create placebo texture";
-        return false;
-    }
-
-    gl_funcs.glCreateMemoryObjectsEXT(1, &t.gl_mem);
-    GLint dedicated = GL_TRUE;
-    gl_funcs.glMemoryObjectParameterivEXT(t.gl_mem, GL_DEDICATED_MEMORY_OBJECT_EXT, &dedicated);
-    gl_funcs.glImportMemoryFdEXT(t.gl_mem, t.placebo_tex->shared_mem.size, GL_HANDLE_TYPE_OPAQUE_FD_EXT, dup(t.placebo_tex->shared_mem.handle.fd));
-
-    gl_context->functions()->glDeleteTextures(1, &t.gl_tex);
-    gl_context->functions()->glGenTextures(1, &t.gl_tex);
-    gl_context->functions()->glBindTexture(GL_TEXTURE_2D, t.gl_tex);
-    gl_context->functions()->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_TILING_EXT, GL_OPTIMAL_TILING_EXT);
-    gl_funcs.glTexStorageMem2DEXT(GL_TEXTURE_2D, 1, GL_RGBA8, swapchain_size.width(), swapchain_size.height(), t.gl_mem, 0);
-    gl_context->functions()->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    gl_context->functions()->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-    if (!gl_funcs.glIsMemoryObjectEXT(t.gl_mem)) {
-        qCCritical(chiakiGui) << "OpenGL image import failed";
-        return false;
-    }
-
-    gl_context->functions()->glGenFramebuffers(1, &t.gl_fbo);
-    gl_context->functions()->glBindFramebuffer(GL_FRAMEBUFFER, t.gl_fbo);
-    gl_context->functions()->glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, t.gl_tex, 0);
-    gl_context->functions()->glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-    union pl_handle sem_in = {};
-    struct pl_vulkan_sem_params sem_params_in = {
-        .type = VK_SEMAPHORE_TYPE_BINARY,
-        .export_handle = PL_HANDLE_FD,
-        .out_handle = &sem_in,
-    };
-    t.vk_sem_in = pl_vulkan_sem_create(placebo_vulkan->gpu, &sem_params_in);
-
-    union pl_handle sem_out = {};
-    struct pl_vulkan_sem_params sem_params_out = {
-        .type = VK_SEMAPHORE_TYPE_BINARY,
-        .export_handle = PL_HANDLE_FD,
-        .out_handle = &sem_out,
-    };
-    t.vk_sem_out = pl_vulkan_sem_create(placebo_vulkan->gpu, &sem_params_out);
-
-    gl_funcs.glGenSemaphoresEXT(1, &t.gl_sem_in);
-    gl_funcs.glGenSemaphoresEXT(1, &t.gl_sem_out);
-    gl_funcs.glImportSemaphoreFdEXT(t.gl_sem_in, GL_HANDLE_TYPE_OPAQUE_FD_EXT, sem_in.fd);
-    gl_funcs.glImportSemaphoreFdEXT(t.gl_sem_out, GL_HANDLE_TYPE_OPAQUE_FD_EXT, sem_out.fd);
-
-    if (!gl_funcs.glIsSempahoreEXT(t.gl_sem_in) || !gl_funcs.glIsSempahoreEXT(t.gl_sem_out)) {
-        qCCritical(chiakiGui) << "OpenGL semaphore import failed";
-        return false;
-    }
-
-    swapchain_textures[fbo] = t;
-    return true;
+    return swapchain_textures[fbo];
 }
 
 void QmlMainWindow::destroySwapchainTextures()
@@ -612,6 +605,8 @@ void QmlMainWindow::render()
     if (quick_need_render) {
         quick_need_render = false;
         quick_render->render();
+        for (auto it = swapchain_textures.begin(); it != swapchain_textures.end(); ++it)
+            it.value().dirty = true;
     }
 
     frame_mutex.lock();
@@ -627,45 +622,43 @@ void QmlMainWindow::render()
         return;
     }
 
-    SwapchainTexture tex;
-    if (!getSwapchainTexture(sw_frame.fbo, tex)) {
-        qCWarning(chiakiGui) << "Failed to get swapchain texture";
-        return;
-    }
-
     struct pl_frame target_frame = {};
     pl_frame_from_swapchain(&target_frame, &sw_frame);
 
-    struct pl_vulkan_hold_params hold_params = {
-        .tex = tex.placebo_tex,
-        .layout = VK_IMAGE_LAYOUT_GENERAL,
-        .qf = VK_QUEUE_FAMILY_EXTERNAL,
-        .semaphore = {
-            .sem = tex.vk_sem_in,
-        }
-    };
-    pl_vulkan_hold_ex(placebo_vulkan->gpu, &hold_params);
+    SwapchainTexture &tex = getSwapchainTexture(sw_frame.fbo);
+    if (tex.dirty) {
+        tex.dirty = false;
+        struct pl_vulkan_hold_params hold_params = {
+            .tex = tex.placebo_tex,
+            .layout = VK_IMAGE_LAYOUT_GENERAL,
+            .qf = VK_QUEUE_FAMILY_EXTERNAL,
+            .semaphore = {
+                .sem = tex.vk_sem_in,
+            }
+        };
+        pl_vulkan_hold_ex(placebo_vulkan->gpu, &hold_params);
 
-    GLenum gl_layout = GL_LAYOUT_GENERAL_EXT;
-    gl_funcs.glWaitSemaphoreEXT(tex.gl_sem_in, 0, 0, 1, &tex.gl_tex, &gl_layout);
+        GLenum gl_layout = GL_LAYOUT_GENERAL_EXT;
+        gl_funcs.glWaitSemaphoreEXT(tex.gl_sem_in, 0, 0, 1, &tex.gl_tex, &gl_layout);
 
-    gl_context->functions()->glBindFramebuffer(GL_READ_FRAMEBUFFER, gl_fbo->handle());
-    gl_context->functions()->glBindFramebuffer(GL_DRAW_FRAMEBUFFER, tex.gl_fbo);
-    gl_context->extraFunctions()->glBlitFramebuffer(0, 0, swapchain_size.width(), swapchain_size.height(), 0, 0, swapchain_size.width(), swapchain_size.height(), GL_COLOR_BUFFER_BIT, GL_LINEAR);
-    gl_context->functions()->glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-    gl_context->functions()->glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+        gl_context->functions()->glBindFramebuffer(GL_READ_FRAMEBUFFER, gl_fbo->handle());
+        gl_context->functions()->glBindFramebuffer(GL_DRAW_FRAMEBUFFER, tex.gl_fbo);
+        gl_context->extraFunctions()->glBlitFramebuffer(0, 0, swapchain_size.width(), swapchain_size.height(), 0, 0, swapchain_size.width(), swapchain_size.height(), GL_COLOR_BUFFER_BIT, GL_LINEAR);
+        gl_context->functions()->glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+        gl_context->functions()->glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 
-    gl_funcs.glSignalSemaphoreEXT(tex.gl_sem_out, 0, 0, 1, &tex.gl_tex, &gl_layout);
+        gl_funcs.glSignalSemaphoreEXT(tex.gl_sem_out, 0, 0, 1, &tex.gl_tex, &gl_layout);
 
-    struct pl_vulkan_release_params release_params = {
-        .tex = tex.placebo_tex,
-        .layout = VK_IMAGE_LAYOUT_GENERAL,
-        .qf = VK_QUEUE_FAMILY_EXTERNAL,
-        .semaphore = {
-            .sem = tex.vk_sem_out,
-        }
-    };
-    pl_vulkan_release_ex(placebo_vulkan->gpu, &release_params);
+        struct pl_vulkan_release_params release_params = {
+            .tex = tex.placebo_tex,
+            .layout = VK_IMAGE_LAYOUT_GENERAL,
+            .qf = VK_QUEUE_FAMILY_EXTERNAL,
+            .semaphore = {
+                .sem = tex.vk_sem_out,
+            }
+        };
+        pl_vulkan_release_ex(placebo_vulkan->gpu, &release_params);
+    }
 
     struct pl_overlay_part overlay_part = {
         .src = {0, 0, static_cast<float>(swapchain_size.width()), static_cast<float>(swapchain_size.height())},
