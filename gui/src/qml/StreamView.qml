@@ -52,6 +52,10 @@ Item {
                     horizontalCenter: spinner.horizontalCenter
                 }
                 font.pixelSize: 24
+                visible: text
+                onVisibleChanged: if (visible) forceActiveFocus()
+                Keys.onReturnPressed: root.showMainView()
+                Keys.onEscapePressed: root.showMainView()
             }
 
             Label {
@@ -63,6 +67,7 @@ Item {
                 }
                 horizontalAlignment: Text.AlignHCenter
                 font.pixelSize: 20
+                visible: text
             }
         }
     }
@@ -316,6 +321,7 @@ Item {
                     Material.background: activeFocus ? parent.Material.accent : parent.Material.background
                     KeyNavigation.left: noButton
                     KeyNavigation.right: noButton
+                    Keys.onReturnPressed: clicked()
                     Keys.onEscapePressed: sessionStopDialog.close()
                     onVisibleChanged: if (visible) forceActiveFocus()
                     onClicked: {
@@ -334,6 +340,7 @@ Item {
                     Material.background: activeFocus ? parent.Material.accent : parent.Material.background
                     KeyNavigation.left: sleepButton
                     KeyNavigation.right: sleepButton
+                    Keys.onReturnPressed: clicked()
                     Keys.onEscapePressed: sessionStopDialog.close()
                     onClicked: {
                         sessionStopDialog.closeAction = 2;

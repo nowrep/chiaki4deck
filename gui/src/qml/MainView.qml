@@ -6,8 +6,13 @@ import QtQuick.Controls.Material 2.15
 import org.streetpea.chiaki4deck 1.0
 
 Item {
-    Keys.forwardTo: hostsView
     StackView.onActivated: forceActiveFocus()
+    Keys.onUpPressed: hostsView.decrementCurrentIndex()
+    Keys.onDownPressed: hostsView.incrementCurrentIndex()
+    Keys.onMenuPressed: settingsButton.clicked()
+    Keys.onReturnPressed: if (hostsView.currentItem) hostsView.currentItem.connectToHost()
+    Keys.onYesPressed: if (hostsView.currentItem) hostsView.currentItem.wakeUpHost()
+    Keys.onNoPressed: if (hostsView.currentItem) hostsView.currentItem.deleteHost()
 
     ToolBar {
         id: toolBar
@@ -31,6 +36,7 @@ Item {
                 flat: true
                 text: "×"
                 font.pixelSize: 60
+                focusPolicy: Qt.NoFocus
                 onClicked: Qt.quit()
             }
 
@@ -43,16 +49,19 @@ Item {
                 icon.source: "qrc:/icons/add-24px.svg";
                 icon.width: 50
                 icon.height: 50
+                focusPolicy: Qt.NoFocus
                 onClicked: root.showManualHostDialog()
             }
 
             Button {
+                id: settingsButton
                 Layout.fillHeight: true
                 Layout.preferredWidth: 100
                 flat: true
                 icon.source: "qrc:/icons/settings-20px.svg";
                 icon.width: 50
                 icon.height: 50
+                focusPolicy: Qt.NoFocus
                 onClicked: root.showSettingsDialog()
             }
         }
@@ -78,13 +87,24 @@ Item {
         }
         clip: true
         model: Chiaki.hosts
-        Keys.onSpacePressed: currentItem.clicked()
         delegate: ItemDelegate {
             id: delegate
             width: parent ? parent.width : 0
             height: 150
             highlighted: ListView.isCurrentItem
-            onClicked: Chiaki.connectToHost(index)
+            onClicked: connectToHost()
+
+            function connectToHost() {
+                Chiaki.connectToHost(index);
+            }
+
+            function wakeUpHost() {
+                Chiaki.wakeUpHost(index);
+            }
+
+            function deleteHost() {
+                Chiaki.deleteHost(index);
+            }
 
             RowLayout {
                 anchors {
@@ -144,8 +164,23 @@ Item {
                         text: qsTr("Delete")
                         flat: true
                         padding: 20
+                        leftPadding: delegate.highlighted ? 50 : undefined
+                        focusPolicy: Qt.NoFocus
                         visible: !modelData.discovered
-                        onClicked: Chiaki.deleteHost(index)
+                        onClicked: delegate.deleteHost()
+
+                        Image {
+                            anchors {
+                                left: parent.left
+                                verticalCenter: parent.verticalCenter
+                                leftMargin: 12
+                            }
+                            width: 28
+                            height: 28
+                            sourceSize: Qt.size(width, height)
+                            source: "image://svg/button#box"
+                            visible: delegate.highlighted
+                        }
                     }
 
                     Button {
@@ -153,8 +188,23 @@ Item {
                         text: qsTr("Wake Up")
                         flat: true
                         padding: 20
+                        leftPadding: delegate.highlighted ? 50 : undefined
                         visible: modelData.registered && (!modelData.discovered || modelData.state == "standby")
-                        onClicked: Chiaki.wakeUpHost(index)
+                        focusPolicy: Qt.NoFocus
+                        onClicked: delegate.wakeUpHost()
+
+                        Image {
+                            anchors {
+                                left: parent.left
+                                verticalCenter: parent.verticalCenter
+                                leftMargin: 12
+                            }
+                            width: 28
+                            height: 28
+                            sourceSize: Qt.size(width, height)
+                            source: "image://svg/button#pyramid"
+                            visible: delegate.highlighted
+                        }
                     }
                 }
             }
@@ -171,9 +221,10 @@ Item {
         icon.width: 50
         icon.height: 50
         padding: 20
+        focusPolicy: Qt.NoFocus
         checkable: true
         checked: Chiaki.discoveryEnabled
-        onToggled: Chiaki.discoveryEnabled = checked
+        onToggled: Chiaki.discoveryEnabled = !Chiaki.discoveryEnabled
     }
 
     Image {

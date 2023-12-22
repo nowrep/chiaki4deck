@@ -4,6 +4,8 @@ import QtQuick.Controls 2.15
 
 import org.streetpea.chiaki4deck 1.0
 
+import "controls" as C
+
 DialogView {
     property alias host: hostField.text
     title: qsTr("Register Console")
@@ -45,9 +47,10 @@ DialogView {
                 text: qsTr("Host:")
             }
 
-            TextField {
+            C.TextField {
                 id: hostField
                 Layout.preferredWidth: 400
+                firstInFocusChain: true
             }
 
             Label {
@@ -56,7 +59,7 @@ DialogView {
                 visible: onlineId.visible
             }
 
-            TextField {
+            C.TextField {
                 id: onlineId
                 visible: ps4_7.checked
                 placeholderText: qsTr("username, case-sensitive")
@@ -69,13 +72,13 @@ DialogView {
                 visible: accountId.visible
             }
 
-            TextField {
+            C.TextField {
                 id: accountId
                 visible: !ps4_7.checked
                 placeholderText: qsTr("base64")
                 Layout.preferredWidth: 400 - loginButton.width - 20
 
-                Button {
+                C.Button {
                     id: loginButton
                     anchors {
                         left: parent.right
@@ -92,7 +95,7 @@ DialogView {
                 text: qsTr("PIN:")
             }
 
-            TextField {
+            C.TextField {
                 id: pin
                 validator: RegularExpressionValidator { regularExpression: /[0-9]{8}/ }
                 Layout.preferredWidth: 400
@@ -103,7 +106,7 @@ DialogView {
                 text: qsTr("Broadcast:")
             }
 
-            CheckBox {
+            C.CheckBox {
                 id: broadcast
             }
 
@@ -115,27 +118,28 @@ DialogView {
             ColumnLayout {
                 spacing: 0
 
-                RadioButton {
+                C.RadioButton {
                     id: ps4_7
                     property int target: 800
                     text: qsTr("PS4 Firmware < 7.0")
                 }
 
-                RadioButton {
+                C.RadioButton {
                     id: ps4_75
                     property int target: 900
                     text: qsTr("PS4 Firmware >= 7.0, < 8.0")
                 }
 
-                RadioButton {
+                C.RadioButton {
                     id: ps4_8
                     property int target: 1000
                     text: qsTr("PS4 Firmware >= 8.0")
                 }
 
-                RadioButton {
+                C.RadioButton {
                     id: ps5
                     property int target: 1000100
+                    lastInFocusChain: true
                     text: qsTr("PS5")
                     checked: true
                 }

@@ -9,5 +9,6 @@
     <file>chiaki_macos.svg</file>
     <file>console-ps4.svg</file>
     <file>console-ps5.svg</file>
+    <file>buttons.svg</file>
   </qresource>
 </RCC>

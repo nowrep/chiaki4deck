@@ -17,6 +17,19 @@ Item {
         stack.pop();
     }
 
+    Keys.onEscapePressed: close()
+
+    Keys.onMenuPressed: {
+        if (okButton.enabled)
+            okButton.clicked()
+    }
+
+    StackView.onActivated: {
+        var item = mainItem.nextItemInFocusChain();
+        if (item)
+            item.forceActiveFocus(Qt.TabFocusReason)
+    }
+
     onMainItemChanged: {
         if (mainItem) {
             mainItem.parent = contentItem;
@@ -45,6 +58,7 @@ Item {
                 Layout.preferredWidth: 100
                 flat: true
                 text: "❮"
+                focusPolicy: Qt.NoFocus
                 onClicked: {
                     dialog.rejected();
                     dialog.close();
@@ -59,6 +73,7 @@ Item {
                 flat: true
                 padding: 30
                 font.pixelSize: 25
+                focusPolicy: Qt.NoFocus
                 onClicked: dialog.accepted()
             }
         }
