@@ -27,9 +27,6 @@
 
 Q_LOGGING_CATEGORY(chiakiGui, "chiaki.gui", QtInfoMsg);
 
-static ChiakiLog *chiaki_log_ctx = nullptr;
-static QtMessageHandler qt_msg_handler = nullptr;
-
 static void placebo_log_cb(void *user, pl_log_level level, const char *msg)
 {
     ChiakiLogLevel chiaki_level;
@@ -50,33 +47,6 @@ static void placebo_log_cb(void *user, pl_log_level level, const char *msg)
         qCCritical(chiakiGui).noquote() << "[libplacebo]" << msg;
         break;
     }
-}
-
-static void msg_handler(QtMsgType type, const QMessageLogContext &context, const QString &msg)
-{
-    if (!chiaki_log_ctx) {
-        qt_msg_handler(type, context, msg);
-        return;
-    }
-    ChiakiLogLevel chiaki_level;
-    switch (type) {
-    case QtDebugMsg:
-        chiaki_level = CHIAKI_LOG_DEBUG;
-        break;
-    case QtInfoMsg:
-        chiaki_level = CHIAKI_LOG_INFO;
-        break;
-    case QtWarningMsg:
-        chiaki_level = CHIAKI_LOG_WARNING;
-        break;
-    case QtCriticalMsg:
-        chiaki_level = CHIAKI_LOG_ERROR;
-        break;
-    case QtFatalMsg:
-        chiaki_level = CHIAKI_LOG_ERROR;
-        break;
-    }
-    chiaki_log(chiaki_log_ctx, chiaki_level, "%s", qPrintable(msg));
 }
 
 static const char *shader_cache_path()
@@ -157,21 +127,23 @@ void QmlMainWindow::setKeepVideo(bool keep)
     emit keepVideoChanged();
 }
 
-bool QmlMainWindow::grabInput() const
+void QmlMainWindow::grabInput()
 {
-    return grab_input;
-}
-
-void QmlMainWindow::setGrabInput(bool grab)
-{
-    grab_input = grab;
+    setCursor(Qt::ArrowCursor);
+    grab_input++;
     if (session)
         session->BlockInput(grab_input);
-    if (grab_input)
-        setCursor(Qt::ArrowCursor);
-    else
+}
+
+void QmlMainWindow::releaseInput()
+{
+    if (!grab_input)
+        return;
+    grab_input--;
+    if (!grab_input && has_video)
         setCursor(Qt::BlankCursor);
-    emit grabInputChanged();
+    if (session)
+        session->BlockInput(grab_input);
 }
 
 QmlMainWindow::VideoMode QmlMainWindow::videoMode() const
@@ -269,8 +241,6 @@ QSurfaceFormat QmlMainWindow::createSurfaceFormat()
 void QmlMainWindow::init(Settings *settings)
 {
     setSurfaceType(QWindow::VulkanSurface);
-
-    qt_msg_handler = qInstallMessageHandler(msg_handler);
 
     gl_context = new QOpenGLContext;
     if (!gl_context->create()) {
@@ -376,7 +346,7 @@ void QmlMainWindow::init(Settings *settings)
     backend = new QmlBackend(settings, this);
     connect(backend, &QmlBackend::sessionChanged, this, [this](StreamSession *s) {
         session = s;
-        chiaki_log_ctx = session ? session->GetChiakiLog() : nullptr;
+        grab_input = 0;
         if (has_video) {
             has_video = false;
             setCursor(Qt::ArrowCursor);
@@ -782,6 +752,9 @@ bool QmlMainWindow::handleShortcut(QKeyEvent *event)
     case Qt::Key_M:
         if (session)
             session->ToggleMute();
+        return true;
+    case Qt::Key_O:
+        emit menuRequested();
         return true;
     case Qt::Key_Q:
         close();

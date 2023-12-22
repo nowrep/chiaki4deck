@@ -10,6 +10,38 @@
 #include <QUrlQuery>
 #include <QGuiApplication>
 
+static QMutex chiaki_log_mutex;
+static ChiakiLog *chiaki_log_ctx = nullptr;
+static QtMessageHandler qt_msg_handler = nullptr;
+
+static void msg_handler(QtMsgType type, const QMessageLogContext &context, const QString &msg)
+{
+    QMutexLocker lock(&chiaki_log_mutex);
+    if (!chiaki_log_ctx) {
+        qt_msg_handler(type, context, msg);
+        return;
+    }
+    ChiakiLogLevel chiaki_level;
+    switch (type) {
+    case QtDebugMsg:
+        chiaki_level = CHIAKI_LOG_DEBUG;
+        break;
+    case QtInfoMsg:
+        chiaki_level = CHIAKI_LOG_INFO;
+        break;
+    case QtWarningMsg:
+        chiaki_level = CHIAKI_LOG_WARNING;
+        break;
+    case QtCriticalMsg:
+        chiaki_level = CHIAKI_LOG_ERROR;
+        break;
+    case QtFatalMsg:
+        chiaki_level = CHIAKI_LOG_ERROR;
+        break;
+    }
+    chiaki_log(chiaki_log_ctx, chiaki_level, "%s", qPrintable(msg));
+}
+
 QmlRegist::QmlRegist(const ChiakiRegistInfo &regist_info, uint32_t log_mask, QObject *parent)
     : QObject(parent)
 {
@@ -76,6 +108,8 @@ QmlBackend::QmlBackend(Settings *settings, QmlMainWindow *window)
     , settings_qml(new QmlSettings(settings, this))
     , main_window(window)
 {
+    qt_msg_handler = qInstallMessageHandler(msg_handler);
+
     const char *uri = "org.streetpea.chiaki4deck";
     qmlRegisterSingletonInstance(uri, 1, 0, "Chiaki", this);
     qmlRegisterUncreatableType<QmlMainWindow>(uri, 1, 0, "ChiakiWindow", {});
@@ -204,6 +238,10 @@ void QmlBackend::createSession(const StreamSessionConnectInfo &connect_info)
             emit sessionError(tr("Session has quit"), m);
         }
 
+        chiaki_log_mutex.lock();
+        chiaki_log_ctx = nullptr;
+        chiaki_log_mutex.unlock();
+
         qDeleteAll(controllers);
         controllers.clear();
         connect(stream_session, &QObject::destroyed, this, [this]() {
@@ -227,6 +265,10 @@ void QmlBackend::createSession(const StreamSessionConnectInfo &connect_info)
         main_window->resize(connect_info.video_profile.width, connect_info.video_profile.height);
 
     updateControllers();
+
+    chiaki_log_mutex.lock();
+    chiaki_log_ctx = stream_session->GetChiakiLog();
+    chiaki_log_mutex.unlock();
 
     stream_session->Start();
     emit sessionChanged(stream_session);
@@ -347,8 +389,10 @@ void QmlBackend::connectToHost(int index)
     }
 
     // Need to wake console first
-    if (server.discovered && server.discovery_host.state == CHIAKI_DISCOVERY_HOST_STATE_STANDBY)
+    if (server.discovered && server.discovery_host.state == CHIAKI_DISCOVERY_HOST_STATE_STANDBY) {
+        emit error(tr("Error"), tr("Console is in standby."));
         return;
+    }
 
     QString host = server.GetHostAddr();
     StreamSessionConnectInfo info(
