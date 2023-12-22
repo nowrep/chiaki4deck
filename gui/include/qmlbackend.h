@@ -75,6 +75,8 @@ public:
     Q_INVOKABLE void connectToHost(int index);
     Q_INVOKABLE void stopSession(bool sleep);
     Q_INVOKABLE void enterPin(const QString &pin);
+    Q_INVOKABLE QUrl psnLoginUrl() const;
+    Q_INVOKABLE bool handlePsnLoginRedirect(const QUrl &url);
 
 signals:
     void sessionChanged(StreamSession *session);
@@ -86,6 +88,7 @@ signals:
     void sessionPinDialogRequested();
     void sessionStopDialogRequested();
     void registDialogRequested(const QString &host);
+    void psnLoginAccountIdDone(const QString &accountId);
 
 private:
     struct DisplayServer {
