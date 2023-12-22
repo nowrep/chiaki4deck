@@ -17,6 +17,8 @@ Item {
         stack.pop();
     }
 
+    Keys.onEscapePressed: close()
+
     onMainItemChanged: {
         if (mainItem) {
             mainItem.parent = contentItem;
@@ -45,6 +47,7 @@ Item {
                 Layout.preferredWidth: 100
                 flat: true
                 text: "❮"
+                focusPolicy: Qt.NoFocus
                 onClicked: {
                     dialog.rejected();
                     dialog.close();
@@ -59,6 +62,7 @@ Item {
                 flat: true
                 padding: 30
                 font.pixelSize: 25
+                focusPolicy: Qt.NoFocus
                 onClicked: dialog.accepted()
             }
         }

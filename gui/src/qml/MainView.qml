@@ -6,8 +6,11 @@ import QtQuick.Controls.Material 2.15
 import org.streetpea.chiaki4deck 1.0
 
 Item {
-    Keys.forwardTo: hostsView
     StackView.onActivated: forceActiveFocus()
+    Keys.onUpPressed: hostsView.decrementCurrentIndex()
+    Keys.onDownPressed: hostsView.incrementCurrentIndex()
+    Keys.onReturnPressed: hostsView.currentItem.clicked()
+    Keys.onMenuPressed: settingsButton.clicked()
 
     ToolBar {
         id: toolBar
@@ -31,6 +34,7 @@ Item {
                 flat: true
                 text: "×"
                 font.pixelSize: 60
+                focusPolicy: Qt.NoFocus
                 onClicked: Qt.quit()
             }
 
@@ -43,16 +47,19 @@ Item {
                 icon.source: "qrc:/icons/add-24px.svg";
                 icon.width: 50
                 icon.height: 50
+                focusPolicy: Qt.NoFocus
                 onClicked: root.showManualHostDialog()
             }
 
             Button {
+                id: settingsButton
                 Layout.fillHeight: true
                 Layout.preferredWidth: 100
                 flat: true
                 icon.source: "qrc:/icons/settings-20px.svg";
                 icon.width: 50
                 icon.height: 50
+                focusPolicy: Qt.NoFocus
                 onClicked: root.showSettingsDialog()
             }
         }
@@ -78,7 +85,6 @@ Item {
         }
         clip: true
         model: Chiaki.hosts
-        Keys.onSpacePressed: currentItem.clicked()
         delegate: ItemDelegate {
             id: delegate
             width: parent ? parent.width : 0
@@ -144,6 +150,7 @@ Item {
                         text: qsTr("Delete")
                         flat: true
                         padding: 20
+                        focusPolicy: Qt.NoFocus
                         visible: !modelData.discovered
                         onClicked: Chiaki.deleteHost(index)
                     }
@@ -153,6 +160,7 @@ Item {
                         text: qsTr("Send WakeUp")
                         flat: true
                         padding: 20
+                        focusPolicy: Qt.NoFocus
                         visible: modelData.registered
                         onClicked: Chiaki.wakeUpHost(index)
                     }
@@ -171,9 +179,10 @@ Item {
         icon.width: 50
         icon.height: 50
         padding: 20
+        focusPolicy: Qt.NoFocus
         checkable: true
         checked: Chiaki.discoveryEnabled
-        onToggled: Chiaki.discoveryEnabled = checked
+        onToggled: Chiaki.discoveryEnabled = !Chiaki.discoveryEnabled
     }
 
     Image {

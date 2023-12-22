@@ -9,6 +9,21 @@ DialogView {
     id: dialog
     title: qsTr("Settings")
     buttonVisible: false
+    Keys.onPressed: (event) => {
+        if (event.modifiers)
+            return;
+        switch (event.key) {
+        case Qt.Key_PageUp:
+            bar.decrementCurrentIndex();
+            break;
+        case Qt.Key_PageDown:
+            bar.incrementCurrentIndex();
+            break;
+        default:
+            return;
+        }
+        event.accepted = true;
+    }
 
     Item {
         TabBar {

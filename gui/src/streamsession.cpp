@@ -713,6 +713,7 @@ void StreamSession::SendFeedbackState()
 
 	if(input_blocked)
 	{
+		chiaki_controller_state_set_idle(&keyboard_state);
 		chiaki_session_set_controller_state(&session, &state);
 		return;
 	}

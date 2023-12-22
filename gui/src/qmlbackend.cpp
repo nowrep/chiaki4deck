@@ -52,8 +52,11 @@ QmlController::QmlController(Controller *c, QObject *t, QObject *parent)
             { CHIAKI_CONTROLLER_BUTTON_DPAD_DOWN, Qt::Key_Down },
             { CHIAKI_CONTROLLER_BUTTON_DPAD_LEFT, Qt::Key_Left },
             { CHIAKI_CONTROLLER_BUTTON_DPAD_RIGHT, Qt::Key_Right },
-            { CHIAKI_CONTROLLER_BUTTON_CROSS, Qt::Key_Space },
+            { CHIAKI_CONTROLLER_BUTTON_CROSS, Qt::Key_Return },
             { CHIAKI_CONTROLLER_BUTTON_MOON, Qt::Key_Escape },
+            { CHIAKI_CONTROLLER_BUTTON_L1, Qt::Key_PageUp },
+            { CHIAKI_CONTROLLER_BUTTON_R1, Qt::Key_PageDown },
+            { CHIAKI_CONTROLLER_BUTTON_OPTIONS, Qt::Key_Menu },
         };
         uint32_t buttons = controller->GetState().buttons;
         for (auto &k : key_map) {

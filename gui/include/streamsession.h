@@ -229,7 +229,7 @@ class StreamSession : public QObject
 		void HandleMousePressEvent(QMouseEvent *event);
 		void HandleMouseMoveEvent(QMouseEvent *event, float width, float height);
 
-		void BlockInput(bool block) { input_blocked = block; }
+		void BlockInput(bool block) { input_blocked = block; SendFeedbackState(); }
 
 	signals:
 		void FfmpegFrameAvailable();
