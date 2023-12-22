@@ -57,6 +57,8 @@ int real_main(int argc, char *argv[])
 	qRegisterMetaType<ChiakiRegistEventType>();
 	qRegisterMetaType<ChiakiLogLevel>();
 
+	qputenv("QTWEBENGINE_CHROMIUM_FLAGS", "--disable-gpu");
+
 	QApplication::setOrganizationName("Chiaki");
 	QApplication::setApplicationName("Chiaki");
 	QApplication::setApplicationVersion(CHIAKI_VERSION);
