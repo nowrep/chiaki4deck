@@ -115,6 +115,8 @@ class StreamSession : public QObject
 	friend class StreamSessionPrivate;
 
 	Q_OBJECT
+	Q_PROPERTY(QString host READ GetHost CONSTANT)
+	Q_PROPERTY(double measuredBitrate READ GetMeasuredBitrate NOTIFY MeasuredBitrateChanged)
 
 	private:
 		SessionLog log;
@@ -126,6 +128,8 @@ class StreamSession : public QObject
 		bool mic_connected;
 		bool allow_unmute;
 		bool input_blocked;
+		QString host;
+		double measured_bitrate = 0;
 
 		QHash<int, Controller *> controllers;
 #if CHIAKI_GUI_ENABLE_SETSU
@@ -216,6 +220,8 @@ class StreamSession : public QObject
 		void GoToBed();
 		void ToggleMute();
 		void SetLoginPIN(const QString &pin);
+		QString GetHost() { return host; }
+		double GetMeasuredBitrate()	{ return measured_bitrate; }
 
 		ChiakiLog *GetChiakiLog()				{ return log.GetChiakiLog(); }
 		QList<Controller *> GetControllers()	{ return controllers.values(); }
@@ -238,6 +244,7 @@ class StreamSession : public QObject
 #endif
 		void SessionQuit(ChiakiQuitReason reason, const QString &reason_str);
 		void LoginPINRequested(bool incorrect);
+		void MeasuredBitrateChanged();
 
 	private slots:
 		void UpdateGamepads();

@@ -221,6 +221,7 @@ StreamSession::StreamSession(const StreamSessionConnectInfo &connect_info, QObje
 #endif
 	audio_buffer_size = connect_info.audio_buffer_size;
 
+	host = connect_info.host;
 	QByteArray host_str = connect_info.host.toUtf8();
 
 	ChiakiConnectInfo chiaki_connect_info = {};
@@ -1403,6 +1404,11 @@ void StreamSession::HandleSetsuEvent(SetsuEvent *event)
 void StreamSession::TriggerFfmpegFrameAvailable()
 {
 	emit FfmpegFrameAvailable();
+	if(measured_bitrate != session.stream_connection.measured_bitrate)
+	{
+		measured_bitrate = session.stream_connection.measured_bitrate;
+		emit MeasuredBitrateChanged();
+	}
 }
 
 class StreamSessionPrivate

@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Controls 2.15
 import QtQuick.Controls.Material 2.15
+import QtGraphicalEffects 1.0
 
 import org.streetpea.chiaki4deck 1.0
 
@@ -74,7 +75,7 @@ Item {
     RoundButton {
         anchors {
             right: parent.right
-            bottom: parent.bottom
+            top: parent.top
             margins: 40
         }
         icon.source: "qrc:/icons/discover-off-24px.svg"
@@ -89,7 +90,171 @@ Item {
 
         Timer {
             id: networkIndicatorTimer
-            interval: 1000
+            interval: 400
+        }
+    }
+
+    Item {
+        id: menuView
+        anchors {
+            left: parent.left
+            right: parent.right
+            bottom: parent.bottom
+        }
+        height: 200
+        opacity: 0.0
+        visible: opacity
+        onVisibleChanged: {
+            if (visible) {
+                Chiaki.window.grabInput();
+                closeButton.forceActiveFocus();
+            } else {
+                Chiaki.window.releaseInput();
+            }
+        }
+
+        Behavior on opacity { NumberAnimation { duration: 250 } }
+
+        function toggle() {
+            opacity = visible ? 0.0 : 1.0;
+        }
+
+        function close() {
+            opacity = 0.0;
+        }
+
+        LinearGradient {
+            id: bgMask
+            anchors.fill: parent
+            gradient: Gradient {
+                GradientStop { position: 0.0; color: "transparent"}
+                GradientStop { position: 0.8; color: "#aa808080" }
+                GradientStop { position: 1.0; color: "#cc808080" }
+            }
+        }
+
+        OpacityMask {
+            anchors.fill: parent
+            source: parent
+            maskSource: bgMask
+        }
+
+        RowLayout {
+            anchors {
+                left: parent.left
+                bottom: parent.bottom
+                leftMargin: 30
+                bottomMargin: 40
+            }
+            spacing: 0
+
+            ToolButton {
+                id: closeButton
+                Layout.rightMargin: 80
+                text: "×"
+                padding: 20
+                font.pixelSize: 50
+                down: activeFocus
+                onClicked: Chiaki.window.close()
+                KeyNavigation.right: zoomButton
+                Keys.onReturnPressed: clicked()
+                Keys.onEscapePressed: menuView.close()
+            }
+
+            ToolButton {
+                id: zoomButton
+                text: qsTr("Zoom")
+                padding: 20
+                checkable: true
+                checked: Chiaki.window.videoMode == ChiakiWindow.VideoMode.Zoom
+                onToggled: Chiaki.window.videoMode = Chiaki.window.videoMode == ChiakiWindow.VideoMode.Zoom ? ChiakiWindow.VideoMode.Normal : ChiakiWindow.VideoMode.Zoom
+                KeyNavigation.left: closeButton
+                KeyNavigation.right: stretchButton
+                Keys.onReturnPressed: toggled()
+                Keys.onEscapePressed: menuView.close()
+            }
+
+            ToolSeparator {
+                Layout.leftMargin: -10
+                Layout.rightMargin: -10
+            }
+
+            ToolButton {
+                id: stretchButton
+                Layout.rightMargin: 50
+                text: qsTr("Stretch")
+                padding: 20
+                checkable: true
+                checked: Chiaki.window.videoMode == ChiakiWindow.VideoMode.Stretch
+                onToggled: Chiaki.window.videoMode = Chiaki.window.videoMode == ChiakiWindow.VideoMode.Stretch ? ChiakiWindow.VideoMode.Normal : ChiakiWindow.VideoMode.Stretch
+                KeyNavigation.left: zoomButton
+                KeyNavigation.right: defaultButton
+                Keys.onReturnPressed: toggled()
+                Keys.onEscapePressed: menuView.close()
+            }
+
+            ToolButton {
+                id: defaultButton
+                text: qsTr("Default")
+                padding: 20
+                checkable: true
+                checked: Chiaki.window.videoPreset == ChiakiWindow.VideoPreset.Default
+                onToggled: Chiaki.window.videoPreset = ChiakiWindow.VideoPreset.Default
+                KeyNavigation.left: stretchButton
+                KeyNavigation.right: highQualityButton
+                Keys.onReturnPressed: toggled()
+                Keys.onEscapePressed: menuView.close()
+            }
+
+            ToolSeparator {
+                Layout.leftMargin: -10
+                Layout.rightMargin: -10
+            }
+
+            ToolButton {
+                id: highQualityButton
+                text: qsTr("High Quality")
+                padding: 20
+                checkable: true
+                checked: Chiaki.window.videoPreset == ChiakiWindow.VideoPreset.HighQuality
+                onToggled: Chiaki.window.videoPreset = ChiakiWindow.VideoPreset.HighQuality
+                KeyNavigation.left: defaultButton
+                Keys.onReturnPressed: toggled()
+                Keys.onEscapePressed: menuView.close()
+            }
+        }
+
+        Label {
+            anchors {
+                right: consoleNameLabel.right
+                bottom: consoleNameLabel.top
+                bottomMargin: 5
+
+            }
+            text: "Mbps"
+            font.pixelSize: 18
+
+            Label {
+                anchors {
+                    right: parent.left
+                    baseline: parent.baseline
+                    rightMargin: 5
+                }
+                text: visible && Chiaki.session ? Chiaki.session.measuredBitrate.toFixed(1) : ""
+                color: Material.accent
+                font.bold: true
+                font.pixelSize: 28
+            }
+        }
+
+        Label {
+            id: consoleNameLabel
+            anchors {
+                right: parent.right
+                bottom: parent.bottom
+                margins: 50
+            }
+            text: qsTr("Connected to <b>%1</b>").arg(Chiaki.session ? Chiaki.session.host : "")
         }
     }
 
@@ -101,10 +266,10 @@ Item {
         padding: 30
         onOpened: {
             closeAction = 0;
-            Chiaki.window.grabInput = true;
+            Chiaki.window.grabInput();
         }
         onClosed: {
-            Chiaki.window.grabInput = false;
+            Chiaki.window.releaseInput();
             if (closeAction)
                 Chiaki.stopSession(closeAction == 1);
         }
@@ -177,13 +342,13 @@ Item {
         closePolicy: Popup.NoAutoClose
         standardButtons: Dialog.Ok | Dialog.Cancel
         onOpened: {
-            Chiaki.window.grabInput = true;
+            Chiaki.window.grabInput();
             standardButton(Dialog.Ok).enabled = Qt.binding(function() {
                 return pinField.acceptableInput;
             });
             pinField.forceActiveFocus();
         }
-        onClosed: Chiaki.window.grabInput = false;
+        onClosed: Chiaki.window.releaseInput()
         onAccepted: Chiaki.enterPin(pinField.text)
         onRejected: Chiaki.stopSession(false)
 
@@ -221,6 +386,7 @@ Item {
         }
 
         function onSessionStopDialogRequested() {
+            menuView.close();
             sessionStopDialog.open();
         }
     }
@@ -238,6 +404,14 @@ Item {
         function onCorruptedFramesChanged() {
             if (Chiaki.window.corruptedFrames > 1)
                 networkIndicatorTimer.restart();
+        }
+
+        function onMenuRequested() {
+            if (!Chiaki.window.hasVideo)
+                return;
+            if (sessionPinDialog.opened || sessionStopDialog.opened)
+                return;
+            menuView.toggle();
         }
     }
 }
