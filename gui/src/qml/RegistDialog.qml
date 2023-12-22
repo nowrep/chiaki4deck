@@ -10,10 +10,6 @@ DialogView {
     buttonText: qsTr("✓ Register")
     buttonEnabled: hostField.text.trim() && pin.acceptableInput && (!onlineId.visible || onlineId.text.trim()) && (!accountId.visible || accountId.text.trim())
     StackView.onActivated: {
-        if (host)
-            accountId.forceActiveFocus();
-        else
-            hostField.forceActiveFocus()
         if (host == "255.255.255.255")
             broadcast.checked = true;
     }

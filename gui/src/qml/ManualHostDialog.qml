@@ -8,7 +8,6 @@ DialogView {
     title: qsTr("Add Manual Console")
     buttonText: qsTr("✓ Add")
     buttonEnabled: hostField.text.trim()
-    StackView.onActivated: hostField.forceActiveFocus()
     onAccepted: {
         Chiaki.addManualHost(consoleCombo.model[consoleCombo.currentIndex].index, hostField.text);
         close();
