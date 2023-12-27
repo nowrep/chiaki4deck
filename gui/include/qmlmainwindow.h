@@ -12,6 +12,7 @@
 
 extern "C" {
 #include <libavcodec/avcodec.h>
+#include <libavutil/hwcontext_vulkan.h>
 #include <libplacebo/options.h>
 #include <libplacebo/vulkan.h>
 #include <libplacebo/renderer.h>
@@ -71,6 +72,7 @@ public:
     void show();
     void presentFrame(AVFrame *frame);
 
+    AVBufferRef *vulkanHwDeviceCtx();
     static QSurfaceFormat createSurfaceFormat();
 
 signals:
@@ -119,6 +121,7 @@ private:
     bool closing = false;
     QmlBackend *backend = {};
     StreamSession *session = {};
+    AVBufferRef *vulkan_hw_dev_ctx = nullptr;
 
     pl_cache placebo_cache = {};
     pl_log placebo_log = {};
@@ -128,6 +131,7 @@ private:
     pl_renderer placebo_renderer = {};
     pl_tex placebo_tex[4] = {{}, {}, {}, {}};
     VkSurfaceKHR surface = VK_NULL_HANDLE;
+    int vk_decode_queue_index = -1;
     QSize swapchain_size;
     QMutex frame_mutex;
     QThread *frame_thread = {};
