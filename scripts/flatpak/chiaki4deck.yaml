@@ -17,6 +17,7 @@ finish-args:
   - --device=all
   - --allow=bluetooth
   - --socket=pulseaudio
+  - --socket=system-bus
   - --own-name=org.kde.*
   - --env=DBUS_FATAL_WARNINGS=0
   - --env=RADV_PERFTEST=video_decode

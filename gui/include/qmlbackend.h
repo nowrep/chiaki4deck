@@ -90,6 +90,9 @@ signals:
     void registDialogRequested(const QString &host);
     void psnLoginAccountIdDone(const QString &accountId);
 
+private slots:
+    void login1PrepareForSleep(bool start);
+
 private:
     struct DisplayServer {
         bool valid = false;
@@ -118,4 +121,6 @@ private:
     DiscoveryManager discovery_manager;
     QHash<int, QmlController*> controllers;
     DisplayServer regist_dialog_server;
+    StreamSessionConnectInfo last_connect_info;
+    bool resume_session = false;
 };

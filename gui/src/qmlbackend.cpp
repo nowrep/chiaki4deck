@@ -9,6 +9,7 @@
 #include <QUrl>
 #include <QUrlQuery>
 #include <QGuiApplication>
+#include <QDBusConnection>
 
 static QMutex chiaki_log_mutex;
 static ChiakiLog *chiaki_log_ctx = nullptr;
@@ -110,6 +111,7 @@ QmlBackend::QmlBackend(Settings *settings, QmlMainWindow *window)
     , settings(settings)
     , settings_qml(new QmlSettings(settings, this))
     , main_window(window)
+    , last_connect_info(settings, {}, {}, {}, {}, {}, false, false, false)
 {
     qt_msg_handler = qInstallMessageHandler(msg_handler);
 
@@ -132,6 +134,10 @@ QmlBackend::QmlBackend(Settings *settings, QmlMainWindow *window)
 
     connect(ControllerManager::GetInstance(), &ControllerManager::AvailableControllersUpdated, this, &QmlBackend::updateControllers);
     updateControllers();
+
+    QDBusConnection::systemBus().connect(QStringLiteral("org.freedesktop.login1"),
+        QStringLiteral("/org/freedesktop/login1"), QStringLiteral("org.freedesktop.login1.Manager"),
+        QStringLiteral("PrepareForSleep"), this, SLOT(login1PrepareForSleep(bool)));
 }
 
 QmlBackend::~QmlBackend()
@@ -221,6 +227,8 @@ void QmlBackend::createSession(const StreamSessionConnectInfo &connect_info)
         updateControllers();
         return;
     }
+
+    last_connect_info = connect_info;
 
     connect(stream_session, &StreamSession::FfmpegFrameAvailable, frame_thread->parent(), [this]() {
         ChiakiFfmpegDecoder *decoder = stream_session->GetFfmpegDecoder();
@@ -451,6 +459,21 @@ bool QmlBackend::handlePsnLoginRedirect(const QUrl &url)
     });
     psnId->GetPsnAccountId(code);
     return true;
+}
+
+void QmlBackend::login1PrepareForSleep(bool start)
+{
+    if (start) {
+        if (stream_session) {
+            stream_session->Stop();
+            resume_session = true;
+        }
+    } else if (resume_session) {
+        resume_session = false;
+        QTimer::singleShot(1000, this, [this]() {
+            createSession(last_connect_info);
+        });
+    }
 }
 
 QmlBackend::DisplayServer QmlBackend::displayServerAt(int index) const
