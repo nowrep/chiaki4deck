@@ -9,6 +9,7 @@
 
 extern "C" {
 #include <libavcodec/avcodec.h>
+#include <SDL.h>
 }
 
 QmlSettings::QmlSettings(Settings *settings, QObject *parent)
@@ -288,10 +289,12 @@ void QmlSettings::refreshAudioDevices()
     });
     watcher->setFuture(QtConcurrent::run([]() {
         Result res;
-        for (QAudioDeviceInfo dev : QAudioDeviceInfo::availableDevices(QAudio::AudioInput))
-            res.first.append(dev.deviceName());
-        for (QAudioDeviceInfo dev : QAudioDeviceInfo::availableDevices(QAudio::AudioOutput))
-            res.second.append(dev.deviceName());
+        int count = SDL_GetNumAudioDevices(true);
+        for (int i = 0; i < count; i++)
+            res.first.append(SDL_GetAudioDeviceName(i, true));
+        count = SDL_GetNumAudioDevices(false);
+        for (int i = 0; i < count; i++)
+            res.second.append(SDL_GetAudioDeviceName(i, false));
         return res;
     }));
 }
