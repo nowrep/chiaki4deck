@@ -2,7 +2,7 @@ import QtQuick 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Controls 2.15
 import QtQuick.Controls.Material 2.15
-import QtGraphicalEffects 1.0
+// import QtGraphicalEffects 1.0
 
 import org.streetpea.chiaki4deck 1.0
 
@@ -124,6 +124,7 @@ Item {
             opacity = 0.0;
         }
 
+        /*
         LinearGradient {
             id: bgMask
             anchors.fill: parent
@@ -139,6 +140,7 @@ Item {
             source: parent
             maskSource: bgMask
         }
+        */
 
         RowLayout {
             anchors {

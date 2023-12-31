@@ -5,10 +5,7 @@
 #include <QMutex>
 #include <QWindow>
 #include <QQuickWindow>
-#include <QSurfaceFormat>
 #include <QLoggingCategory>
-#include <QOffscreenSurface>
-#include <QOpenGLFramebufferObject>
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -73,7 +70,6 @@ public:
     void presentFrame(AVFrame *frame);
 
     AVBufferRef *vulkanHwDeviceCtx();
-    static QSurfaceFormat createSurfaceFormat();
 
 signals:
     void hasVideoChanged();
@@ -84,18 +80,6 @@ signals:
     void menuRequested();
 
 private:
-    struct SwapchainTexture {
-        bool dirty = true;
-        pl_tex placebo_tex = {};
-        VkSemaphore vk_sem_in = VK_NULL_HANDLE;
-        VkSemaphore vk_sem_out = VK_NULL_HANDLE;
-        GLuint gl_mem = 0;
-        GLuint gl_tex = 0;
-        GLuint gl_sem_in = 0;
-        GLuint gl_sem_out = 0;
-        GLuint gl_fbo = 0;
-    };
-
     void init(Settings *settings);
     void update();
     void scheduleUpdate();
@@ -103,9 +87,9 @@ private:
     void destroySwapchain();
     void resizeSwapchain();
     void updateSwapchain();
-    SwapchainTexture &getSwapchainTexture(pl_tex fbo);
-    void destroySwapchainTextures();
     void sync();
+    void beginFrame();
+    void endFrame();
     void render();
     bool handleShortcut(QKeyEvent *event);
     bool event(QEvent *event) override;
@@ -140,32 +124,18 @@ private:
     AVFrame *next_frame = {};
     std::atomic<bool> render_scheduled = {false};
 
-    QOpenGLContext *gl_context = {};
-    QOffscreenSurface *gl_surface = {};
-    QOpenGLFramebufferObject *gl_fbo = {};
+    QVulkanInstance *qt_vk_inst = {};
     QQmlEngine *qml_engine = {};
     QQuickWindow *quick_window = {};
     QQuickRenderControl *quick_render = {};
     QQuickItem *quick_item = {};
+    pl_tex quick_tex = {};
+    VkSemaphore quick_sem = VK_NULL_HANDLE;
+    uint64_t quick_sem_value = 1;
     QTimer *update_timer = {};
-    QHash<pl_tex, SwapchainTexture> swapchain_textures;
+    bool quick_frame = false;
     std::atomic<bool> quick_need_sync = {false};
     std::atomic<bool> quick_need_render = {false};
-    struct {
-        PFNGLCREATEMEMORYOBJECTSEXTPROC glCreateMemoryObjectsEXT;
-        PFNGLDELETEMEMORYOBJECTSEXTPROC glDeleteMemoryObjectsEXT;
-        PFNGLMEMORYOBJECTPARAMETERIVEXTPROC glMemoryObjectParameterivEXT;
-        PFNGLIMPORTMEMORYFDEXTPROC glImportMemoryFdEXT;
-        PFNGLTEXSTORAGEMEM2DEXTPROC glTexStorageMem2DEXT;
-        PFNGLISMEMORYOBJECTEXTPROC glIsMemoryObjectEXT;
-        PFNGLGENSEMAPHORESEXTPROC glGenSemaphoresEXT;
-        PFNGLDELETESEMAPHORESEXTPROC glDeleteSemaphoresEXT;
-        PFNGLIMPORTSEMAPHOREFDEXTPROC glImportSemaphoreFdEXT;
-        PFNGLISSEMAPHOREEXTPROC glIsSempahoreEXT;
-        PFNGLWAITSEMAPHOREEXTPROC glWaitSemaphoreEXT;
-        PFNGLSIGNALSEMAPHOREEXTPROC glSignalSemaphoreEXT;
-        PFNGLGETUNSIGNEDBYTEI_VEXTPROC glGetUnsignedBytei_vEXT;
-    } gl_funcs;
 
     friend class QmlBackend;
 };

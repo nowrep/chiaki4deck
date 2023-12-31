@@ -96,9 +96,7 @@ int real_main(int argc, char *argv[])
 
 	Application::setAttribute(Qt::AA_ShareOpenGLContexts);
 
-#ifdef CHIAKI_GUI_ENABLE_QML
-	QSurfaceFormat::setDefaultFormat(QmlMainWindow::createSurfaceFormat());
-#else
+#ifndef CHIAKI_GUI_ENABLE_QML
 	QSurfaceFormat::setDefaultFormat(AVOpenGLWidget::CreateSurfaceFormat());
 #endif
 

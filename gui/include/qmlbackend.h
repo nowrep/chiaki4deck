@@ -2,14 +2,12 @@
 
 #include "streamsession.h"
 #include "discoverymanager.h"
+#include "qmlmainwindow.h"
+#include "qmlsettings.h"
 
 #include <QObject>
 #include <QThread>
 #include <QJSValue>
-
-class QmlSettings;
-class QmlMainWindow;
-class StreamSession;
 
 class QmlRegist : public QObject
 {

@@ -2,7 +2,6 @@
 #include "qmlsettings.h"
 #include "qmlmainwindow.h"
 #include "streamsession.h"
-#include "registdialog.h"
 #include "controllermanager.h"
 #include "psnaccountid.h"
 
