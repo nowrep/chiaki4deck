@@ -163,6 +163,9 @@ static ChiakiErrorCode chiaki_video_receiver_flush_frame(ChiakiVideoReceiver *vi
 		}
 	}
 
+    if (!succ)
+        stream_connection_send_corrupt_frame(&video_receiver->session->stream_connection, video_receiver->frame_index_cur, video_receiver->frame_index_cur);
+
 	if(video_receiver->session->video_sample_cb)
 	{
 		bool cb_succ = video_receiver->session->video_sample_cb(frame, frame_size, video_receiver->frames_lost, video_receiver->session->video_sample_cb_user);
