@@ -9,6 +9,7 @@
 #include <QObject>
 #include <QThread>
 #include <QJSValue>
+#include <QTimer>
 
 class SystemdInhibit;
 
@@ -102,6 +103,7 @@ private:
 
     DisplayServer displayServerAt(int index) const;
     bool sendWakeup(const DisplayServer &server);
+    bool sendWakeupSession();
     void updateControllers();
 
     Settings *settings = {};
@@ -109,6 +111,7 @@ private:
     QmlMainWindow *window = {};
     StreamSession *session = {};
     QThread *frame_thread = {};
+    QTimer *wakeup_timer = {};
     DiscoveryManager discovery_manager;
     QHash<int, QmlController*> controllers;
     DisplayServer regist_dialog_server;

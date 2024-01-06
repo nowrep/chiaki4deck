@@ -112,19 +112,27 @@ QmlBackend::QmlBackend(Settings *settings, QmlMainWindow *window)
     connect(sleep_inhibit, &SystemdInhibit::resume, this, [this]() {
         qCInfo(chiakiGui) << "Resumed from sleep";
         if (resume_session) {
-            qCInfo(chiakiGui) << "Resuming session...";
             resume_session = false;
-            createSession({
-                session_info.settings,
-                session_info.target,
-                session_info.host,
-                session_info.regist_key,
-                session_info.morning,
-                session_info.initial_login_pin,
-                session_info.fullscreen,
-                session_info.zoom,
-                session_info.stretch,
+            wakeup_timer = new QTimer(this);
+            connect(wakeup_timer, &QTimer::timeout, this, [this]() {
+                if(sendWakeupSession())
+                {
+                    wakeup_timer->stop();
+                    qCInfo(chiakiGui) << "Resuming session...";
+                    createSession({
+                        session_info.settings,
+                        session_info.target,
+                        session_info.host,
+                        session_info.regist_key,
+                        session_info.morning,
+                        session_info.initial_login_pin,
+                        session_info.fullscreen,
+                        session_info.zoom,
+                        session_info.stretch,
+                    });
+                }
             });
+            wakeup_timer->start(1000);
         }
     });
 }
@@ -489,6 +497,18 @@ QmlBackend::DisplayServer QmlBackend::displayServerAt(int index) const
         return server;
     }
     return {};
+}
+
+bool QmlBackend::sendWakeupSession()
+{
+    try {
+        discovery_manager.SendWakeup(session_info.host, session_info.regist_key,
+            chiaki_target_is_ps5(session_info.target));
+        return true;
+    } catch(const Exception &e) {
+        emit error(tr("Wakeup failed"), tr("Failed to send Wakeup packet:\n%1").arg(e.what()));
+        return false;
+    }
 }
 
 bool QmlBackend::sendWakeup(const DisplayServer &server)
