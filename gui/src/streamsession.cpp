@@ -802,6 +802,11 @@ void StreamSession::InitMic(unsigned int channels, unsigned int rate)
 	spec.format = AUDIO_S16SYS;
 	spec.samples = audio_buffer_size / 4;
 	spec.callback = [](void *userdata, Uint8 *stream, int len) {
+        qWarning("mic callback %p %d", stream, len);
+        bool empty = true;
+        for (int i = 0; i < len; ++i)
+            if (stream[i]) empty = false;
+        if (empty) qWarning("no sound");
 		auto s = static_cast<StreamSession*>(userdata);
 		QByteArray data(reinterpret_cast<char*>(stream), len);
 		QMetaObject::invokeMethod(s, std::bind(&StreamSession::ReadMic, s, data));
