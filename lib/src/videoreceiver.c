@@ -269,11 +269,18 @@ static bool parse_slice_h264(ChiakiVideoReceiver *video_receiver, uint8_t *data,
 
 static bool parse_slice_h265(ChiakiVideoReceiver *video_receiver, uint8_t *data, unsigned size, unsigned *slice_type, unsigned *ref_frame)
 {
+	chiaki_log_hexdump(video_receiver->log, CHIAKI_LOG_INFO, data, size < 16 ? size : 16);
+
 	struct vl_vlc vlc = {0};
 	vl_vlc_init(&vlc, data, size);
 	if(!skip_startcode(&vlc))
 	{
 		CHIAKI_LOGW(video_receiver->log, "parse_slice_h265: No startcode found");
+		return false;
+	}
+	if(vl_vlc_bits_left(&vlc) < 32)
+	{
+		CHIAKI_LOGW(video_receiver->log, "parse_slice_h265: Not enough bits left");
 		return false;
 	}
 
@@ -314,6 +321,11 @@ static bool parse_slice_h265(ChiakiVideoReceiver *video_receiver, uint8_t *data,
 	if(nal_unit_type == 1)
 	{
 		*ref_frame = 0xff;
+		if(vl_vlc_bits_left(&vlc) < 32)
+		{
+			CHIAKI_LOGW(video_receiver->log, "parse_slice_h265: Not enough bits left");
+			return false;
+		}
 		vl_rbsp_u(&rbsp, video_receiver->log2_max_frame_num); // slice_pic_order_cnt_lsb
 		if(!vl_rbsp_u(&rbsp, 1)) // short_term_ref_pic_set_sps_flag
 		{
