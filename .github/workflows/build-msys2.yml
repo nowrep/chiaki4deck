@@ -57,11 +57,11 @@ jobs:
 
       - name: Configure Chiaki4deck
         run: |
-          cmake -S . -B build -G "Ninja" -DCMAKE_BUILD_TYPE=Release -DCHIAKI_ENABLE_CLI=OFF
+          cmake -S . -B build -G "Ninja" -DCMAKE_BUILD_TYPE=Debug -DCHIAKI_ENABLE_CLI=OFF
 
       - name: Build Chiaki4deck
         run: |
-          cmake --build build --config Release --clean-first --target chiaki
+          cmake --build build --config Debug --clean-first --target chiaki
           
       - name: Deploy qt6-base:p
         run: |
